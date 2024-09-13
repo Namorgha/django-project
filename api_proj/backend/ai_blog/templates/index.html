@@ -1,132 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI blog</title>
-    {% for item in all %}
-      <p>{{ item }}</p>
-    {% endfor %}
-
-
-  
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Play Ping Pong Online - Join the fun and challenge others!" />
+  <title>Ping Pong Online</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <style>
-@keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to { 
-                transform: rotate(360deg);
-            }
-        }
-         
-        
-         @-webkit-keyframes rotate {
-            from {
-                -webkit-transform: rotate(0deg);
-            }
-            to { 
-                -webkit-transform: rotate(360deg);
-            }
-        }
-        
-        .load {
-            width: 100px;
-            height: 100px;
-            margin: 110px auto 0;
-            border:solid 10px rgb(19,90,125);
-            border-radius: 50%;
-            border-right-color: transparent;
-            border-bottom-color: transparent;
-             -webkit-transition: all 0.5s ease-in;
-            -webkit-animation-name:             rotate; 
-            -webkit-animation-duration:         1.0s; 
-            -webkit-animation-iteration-count:  infinite;
-            -webkit-animation-timing-function: linear;
-                
-                 transition: all 0.5s ease-in;
-            animation-name:             rotate; 
-            animation-duration:         1.0s; 
-            animation-iteration-count:  infinite;
-            animation-timing-function: linear;
-            {
+    .hero-bg {
+      background-image: url('https://source.unsplash.com/random/1600x900?pingpong');
+      background-size: cover;
+      background-position: center;
+    }
   </style>
-  </head>
-  <body class="flex flex-col min-h-screen bg-gray-100 font-sans antialis">
-  
-    
-    <!-- Navbar -->
-      <nav class="bg-blue-600 p-4 text-white flex justify-between">
-        <div>
-          <h1 class="text-3xl font-bold">Ai blog G</h1>
-        </div>
-        <div>
-          <a href="#" class="text-white hover:underline">Logout</a>
-        </div>
-      </nav>
-      <br>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-    {% if messages %}
-      {% for message in messages %}
-      <div id="hwa" class="alert alert-dismissible show bg-yellow-200 text-center shadow-md rounded-l-md" role="alert">
-            
-        {{ message }}
-        <button type="button" data-dismiss="alert" aria-label="Close" onclick="myFunction()" style="position: absolute; right: 15px;">
-              <span aria-hidden="true">&times;</span>
-              <script>
-                function myFunction() {
-                  document.getElementById("hwa").style.display = "none";
-                }
-              </script>
-            </button>
-      {% endfor %}
-    {% endif %}
+  <!-- Navbar -->
+  <nav class="bg-black p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="text-white font-bold text-2xl">Ping Pong Online</div>
+      <div class="space-x-4">
+        <a href="logout" class="text-gray-300 hover:text-white">LogOut</a>
+        <a href="#" class="bg-yellow-900 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md">Ping Online</a>
+      </div>
     </div>
+  </nav>
 
-      <br>
-        <!-- Main -->
-      <div class="flex-grow container mx-auto mt-10 px-4 sm:px-0">
-        <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex flex-col">
+  <!-- Hero Section -->
+  <section class="hero-bg h-screen flex flex-col items-center justify-center text-center text-white bg-cover bg-center bg-green-900">
+    <h1 class="text-5xl font-extrabold">Play Ping Pong Online</h1>
+    <p class="text-lg mt-4">Join the game and challenge players worldwide in real-time matches.</p>
+    <a href="#" class="bg-yellow-900 hover:bg-yellow-500 text-black font-bold py-3 px-6 mt-8 inline-block rounded-md shadow-lg">Start Playing</a>
+  </section>
 
-          <!-- Introduction section -->
-          <div class="text-center">
-            <h2 class="text-2xl font-semibold mb-4">Welcome To Ai Blog G</h2>
-            <p class="text-gray-700">
-              Welcome to our AI-powered blog generator! Effortlessly create compelling content wit cutting-edge technology that turns your ideas into engaging articles in seconds.
-            </p>
-          </div>
-          <br>
+  <!-- About Us Section -->
+  <section id="about" class="py-16 bg-gray-100">
+    <div class="container mx-auto px-6">
+      <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">About Us</h2>
+      <div class="text-center text-gray-600">
+        <p>We are passionate about bringing the excitement of ping pong to the online world. Our platform allows players of all skill levels to compete against each other in real-time matches.</p>
+        <p>Whether you're a seasoned pro or a casual player, Ping Pong Online is your destination for fun, competitive gameplay.</p>
+      </div>
+    </div>
+  </section>
 
-          <!-- idea section -->
-          <div >
-            <h2 class="text-xl mb-4 font-semibold">Enter Your Idea Please</h2>
-            <div class="flex space-x-4">
-              <input id="idea" type="text" placeholder="Paste You think..." class="flex-grow p-2 border border-blue-400 rounded-l-md">
-              <button id="generatorblogbutton" class="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition-colors">Generate</button>
-            </div>
-           
-            <!-- Section for loading circle -->
-            <div style="display: none" id="loading-circle" class="load">
-              
-            </div>
-            <!-- Generated Blog Display Section -->
-            <section class="mt-10 flex-grow ">
-             <h2 class="text-xl mb-4 font-semibold ">Generated Blog Article</h2> 
-             <div id="blogContenet" class="mt-2 text-gray-700 space-y-4">
+  <!-- Get In Touch Section -->
+  <section id="contact" class="py-16 bg-gray-900 text-white">
+    <div class="container mx-auto px-6">
+      <h2 class="text-3xl font-bold text-center mb-12">Get In Touch</h2>
+      <div class="max-w-xl mx-auto">
+        <form class="space-y-6">
+          <input class="w-full p-4 border border-gray-300 rounded-md" type="text" placeholder="Your Name" required />
+          <input class="w-full p-4 border border-gray-300 rounded-md" type="email" placeholder="Your Email" required />
+          <textarea class="w-full p-4 border border-gray-300 rounded-md" placeholder="Your Message" rows="5" required></textarea>
+          <button class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-4 rounded-md">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </section>
 
-             </div>
-            </section>
-          </div
-        </div>
-      </div>  
+  <!-- Footer -->
+  <footer class="bg-black text-white py-6">
+    <div class="container mx-auto text-center">
+      <p>&copy; 2024 Ping Pong Online. All rights reserved.</p>
+    </div>
+  </footer>
 
-      <footer class="text-center p-4 text-black mt-6">
-        Powered by <a href="https://github.com/namorgha/">Nasro Amorgha</a>
-      </footer>
-
-      <script>
-      
-      </script>
-  </body>
+</body>
 </html>
+
