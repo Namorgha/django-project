@@ -1,4 +1,4 @@
-#!/home/bnimkd/django_project/venv/bin/python
+#!/home/bnimkd/django-project/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
