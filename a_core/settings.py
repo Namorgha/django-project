@@ -99,11 +99,21 @@ ASGI_APPLICATION = 'a_core.asgi.application'
 
 
 
+#CHANNEL_LAYERS = {
+#    'default': {
+#        "BACKEND": "channels.layers.InMemoryChannelLayer",
+#    }
+#}
+
 CHANNEL_LAYERS = {
-    'default': {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('redis://default:SQcpLwOAdJKfRePtcKKnajQeraIDKlQL@redis-xgp5.railway.internal:6379')],
+        },
+    },
 }
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -157,15 +167,15 @@ STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-if ENVIRONMENT == 'development':
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
+#if ENVIRONMENT == 'development':
+#    STORAGES = {
+#        "default": {
+#            "BACKEND": "django.core.files.storage.FileSystemStorage",
+#        },
+#        "staticfiles": {
+#            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+#        },
+#    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
