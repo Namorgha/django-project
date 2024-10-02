@@ -1,0 +1,13 @@
+{% extends 'layouts/box.html' %}
+
+{% block content %} 
+
+<h1>Are You sure You Want To Leave This Chat : {{ chat_group.groupchat_name }}?</h1>
+
+<form method='POST'>
+    {% csrf_token %}
+    <button type="submit" class="button-red mt-4">Yes, Leave</button>
+    <a class="button button-gray ml-1" href="{{ request.META.HTTP_REFERER }}">Cancel</a>
+</form>
+
+{% endblock %}

@@ -37,7 +37,7 @@ class GroupMessage(models.Model):
     #
     def __str__(self):
     #    if self.body:
-            return f'{self.author.username} : {self.body}'
+        return f'{self.author.username} : {self.body}'
     #    elif self.file:
     #        return f'{self.author.username} : {self.filename}'
     #
@@ -52,3 +52,13 @@ class GroupMessage(models.Model):
     #        return True 
     #    except:
     #        return False
+class Invite(models.Model):
+    chat_group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE)
+    invited_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    invited_by = models.ForeignKey(User, related_name='invites_sent', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'Invite from {self.invited_by} to {self.invited_user} for {self.chat_group}'
+

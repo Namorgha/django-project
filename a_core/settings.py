@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'a_home',
     'a_users',
     'a_rtchat',
+    'a_game',
 ]
 
 MIDDLEWARE = [
@@ -99,20 +100,20 @@ ASGI_APPLICATION = 'a_core.asgi.application'
 
 
 
-#CHANNEL_LAYERS = {
-#    'default': {
-#        "BACKEND": "channels.layers.InMemoryChannelLayer",
-#    }
-#}
-
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [('redis://default:SQcpLwOAdJKfRePtcKKnajQeraIDKlQL@redis-xgp5.railway.internal:6379')],
-        },
-    },
+    'default': {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
 }
+
+#CHANNEL_LAYERS = {
+#    "default": {
+#        "BACKEND": "channels_redis.core.RedisChannelLayer",
+#        "CONFIG": {
+#            "hosts": [('redis://default:SQcpLwOAdJKfRePtcKKnajQeraIDKlQL@redis-xgp5.railway.internal:6379')],
+#        },
+#    },
+#}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

@@ -77,12 +77,12 @@ class ChatroomConsumer(WebsocketConsumer):
         #author_ids = set([message.author.id for message in chat_messages])
         #users = User.objects.filter(id__in=author_ids)
               
-        #context = {
-        #    'online_count' : online_count,
-        #    'chat_group' : self.chatroom,
-        #   'users': users
-        #}
-        html = render_to_string("a_rtchat/partials/online_count.html", {'online_count':online_count})
+        context = {
+            'online_count' : online_count,
+            'chat_group' : self.chatroom,
+            #'users': users
+        }
+        html = render_to_string("a_rtchat/partials/online_count.html", context)
         self.send(text_data=html)
 
     #class On       lineStatusConsumer(WebsocketConsumer):

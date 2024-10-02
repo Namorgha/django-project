@@ -1,0 +1,16 @@
+{% extends 'layouts/box.html' %}
+
+{% block content %} 
+
+<h1>Send Invitation</h1>
+<form method="post">
+    {% csrf_token %}
+    
+    {{ form.username.label_tag }} 
+    {{ form.username }}
+
+    <button class="mt-2" type="submit">Send</button>
+</form>
+
+{% endblock %}
+
