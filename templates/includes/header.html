@@ -11,7 +11,8 @@
           <li class="relative z-10">
             <a href="{% url 'game' %}" class="relative">Play</a>
           </li>
-          {% elif request.path != '/' %}
+          {% endif %}
+          {% if request.path != '/' %}
           <li class="relative z-10" >
             <a href="{% url 'home' %}">Home</a>
           </li>
@@ -30,7 +31,7 @@
                     <div class="p-2">
                         <h3 class="font-bold text-lg">Public Chatrooms</h3> <!-- Increased text size -->
                         <ul class="hoverlist">
-                          <li><a href="{% url 'home' %}">Public Chat</a></li>
+                          <li><a href="{% url 'chat' %}">Public Chat</a></li>
                             {% for chatroom in user.chat_groups.all %}
                                 {% if chatroom.groupchat_name and not chatroom.is_private %}
                                     <li>

@@ -58,7 +58,7 @@ def chat_view(request, chatroom_name='public-chat'):
 @login_required
 def get_or_create_chatroom(request, username):
     if request.user.username == username:
-        return redirect('home')
+        return redirect('chat')
     
     other_user = User.objects.get(username = username)
     my_chatrooms = request.user.chat_groups.filter(is_private=True)
@@ -130,7 +130,7 @@ def chatroom_delete_view(request, chatroom_name):
     if request.method == "POST":
         chat_group.delete()
         messages.success(request, 'Chatroom deleted')
-        return redirect('home')
+        return redirect('chat')
     
     return render(request, 'a_rtchat/chatroom_delete.html', {'chat_group':chat_group})
 
@@ -148,7 +148,7 @@ def chatroom_leave_view(request, chatroom_name):
             messages.success(request, 'You left the Chat and the chat group has been deleted.')
         else:
             messages.success(request, 'You left the Chat')
-        return redirect('home')
+        return redirect('chat')
     
     return render(request, 'a_rtchat/chat_leave.html', {'chat_group': chat_group})
 

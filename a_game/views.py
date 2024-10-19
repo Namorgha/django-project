@@ -8,6 +8,6 @@ from django.http import Http404
 from .models import *
 #from .forms import *
 
-
 def game_view(request):
     return render(request, 'a_game/game.html')
+

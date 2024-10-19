@@ -1,8 +1,7 @@
+<!DOCTYPE html>
 {% extends 'layouts/blank.html' %}
 
 {% block content %}
-
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,7 +15,7 @@
         body { 
           overflow: hidden;
           font-family: Arial, sans-serif;
-          background-color: #1f0b04;
+          background-color: #1F3A1F;
         }
         h1 {
           color: #fff;
@@ -32,10 +31,11 @@
         #player2 {
           margin-left: 100px;
         }
-        canvas {
-          border: 4px solid #000;
-          display: block;
-          margin: auto;
+        #canvas {
+          position: absolute;
+          top: 50px; /* Adjust to avoid overlapping with navbar */
+          width: 100%;
+          height: calc(100% - 50px); /* Adjust height accordingly */
         }
     </style>
 </head>
@@ -47,21 +47,45 @@
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight - 50; // Adjust for navbar height
 
-    const paddleWidth = 10;
-    const paddleHeight = 160;
+    const keypress = [];
+    const KEY_UP = 87;   // W
+    const KEY_DOWN = 83; // S
+    const KEY_UP2 = 38;  // Arrow Up
+    const KEY_DOWN2 = 40; // Arrow Down
 
-    let paddle1, paddle2, ball;
+    // WebSocket connection
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth; // Full width
-        canvas.height = window.innerHeight; // Full height
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        const direction = data.direction;
 
-        // Update paddle positions based on new canvas size
-        const initialPaddleY = (canvas.height - paddleHeight) / 2; // Center paddles vertically
-        paddle1.pos = vec2(10, initialPaddleY); // Left paddle
-        paddle2.pos = vec2(canvas.width - paddleWidth - 10, initialPaddleY); // Right paddle
-    }
+        // Update paddle movement based on WebSocket direction
+        if (direction === 'up') {
+            paddle1.pos.y -= paddle1.speed.y;
+        } else if (direction === 'down') {
+            paddle1.pos.y += paddle1.speed.y;
+        }
+        paddle1.checkBounds();  // Ensure paddle stays within bounds
+    };
+
+    window.addEventListener('keydown', (e) => { 
+        keypress[e.keyCode] = true; 
+        
+        // Send paddle movement to the WebSocket
+        if (e.keyCode === KEY_UP || e.keyCode === KEY_DOWN) {
+            const direction = e.keyCode === KEY_UP ? 'up' : 'down';
+            socket.send(JSON.stringify({
+                'direction': direction
+            }));
+        }
+    });
+    
+    window.addEventListener('keyup', (e) => { keypress[e.keyCode] = false; });
 
     function vec2(x, y) {
         return { x: x, y: y };
@@ -78,14 +102,14 @@
         };
 
         this.draw = function() {
-            ctx.fillStyle = "#7443a2";
+            ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
         };
     }
 
-    function Paddle(pos, speed, width, height) {
+    function Paddle(pos, speed, width, height, upKey, downKey) {
         this.pos = pos;
         this.speed = speed;
         this.width = width;
@@ -93,6 +117,12 @@
         this.score = 0;
 
         this.update = function() {
+            if (keypress[upKey]) {
+                this.pos.y -= this.speed.y;
+            }
+            if (keypress[downKey]) {
+                this.pos.y += this.speed.y;
+            }
             this.checkBounds();
         };
 
@@ -102,7 +132,7 @@
         };
 
         this.draw = function() {
-            ctx.fillStyle = "#b90303";
+            ctx.fillStyle = "#0000FF";
             ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
         };
 
@@ -111,8 +141,72 @@
         };
     }
 
+    function ballPaddleCollision(ball, paddle) {
+        let dx = Math.abs(ball.pos.x - paddle.getCenter().x);
+        let dy = Math.abs(ball.pos.y - paddle.getCenter().y);
+
+        if (dx <= (ball.radius + paddle.width / 2) && dy <= (paddle.height / 2 + ball.radius)) {
+            let hitPosition = (ball.pos.y - paddle.pos.y) / paddle.height;
+
+            ball.speed.x *= -1;
+            let angle = (hitPosition - 0.5) * Math.PI / 2;
+            ball.speed.y = Math.sin(angle) * 5;
+        }
+    }
+
+
+    function respawnBall(ball) {
+        if (ball.speed.x > 0) {
+            ball.pos.x = canvas.width - 150;
+            ball.pos.y = (Math.random() * (canvas.height - 200)) + 100;
+        }
+        if (ball.speed.x < 0) {
+            ball.pos.x = 150;
+            ball.pos.y = (Math.random() * (canvas.height - 200)) + 100;
+        }
+
+        ball.speed.x *= -1;
+        ball.speed.y *= -1;
+    }
+
+    function increasescore(ball, paddle2, paddle1) {
+        if (ball.pos.x <= -ball.radius) {
+            paddle2.score += 1;
+            document.getElementById("player2").innerHTML = paddle2.score;
+            respawnBall(ball);
+        }
+
+        if (ball.pos.x >= canvas.width + ball.radius) {
+            paddle1.score += 1;
+            document.getElementById("player1").innerHTML = paddle1.score;
+            respawnBall(ball);
+        }
+    }
+
+    const paddleWidth = 10;
+    const paddleHeight = 160;
+    
+    const ball = new Ball(vec2(500, 250), vec2(9, 5), 20);
+    const paddle1 = new Paddle(vec2(10, canvas.height / 2 - paddleHeight / 2), vec2(0, 8), paddleWidth, paddleHeight, KEY_UP, KEY_DOWN);
+    const paddle2 = new Paddle(vec2(canvas.width - paddleWidth - 10, canvas.height / 2 - paddleHeight / 2), vec2(0, 8), paddleWidth, paddleHeight, KEY_UP2, KEY_DOWN2);
+
+    function gameUpdate() {
+        ball.update();
+        paddle1.update();
+        paddle2.update();
+        ballPaddleCollision(ball, paddle1);
+        ballPaddleCollision(ball, paddle2);
+        checkBallEdges(ball);
+        increasescore(ball, paddle2, paddle1);
+    }
+
+    function checkBallEdges(ball) {
+        if (ball.pos.y + ball.radius >= canvas.height || ball.pos.y - ball.radius <= 0) {
+            ball.speed.y *= -1;
+        }
+    }
+
     function gameDraw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
         ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
@@ -122,52 +216,15 @@
     }
 
     function gameLoop() {
-        paddle1.update();
-        paddle2.update();
-        ball.update(); // Update ball position
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        gameUpdate();
         gameDraw();
         requestAnimationFrame(gameLoop);
     }
 
-    // Initialize paddles and ball
-    function initGame() {
-        const initialBallY = canvas.height / 2;
-        ball = new Ball(vec2(canvas.width / 2, initialBallY), vec2(9, 5), 20);
-        paddle1 = new Paddle(vec2(10, (canvas.height - paddleHeight) / 2), vec2(0, 8), paddleWidth, paddleHeight);
-        paddle2 = new Paddle(vec2(canvas.width - paddleWidth - 10, (canvas.height - paddleHeight) / 2), vec2(0, 8), paddleWidth, paddleHeight);
-        resizeCanvas(); // Set initial positions
-    }
-
-    initGame(); // Initial game setup
-    resizeCanvas(); // Initial resize
-    window.addEventListener('resize', resizeCanvas); // Resize on window resize
-
-    // Handle key events for paddle movement
-    const keypress = [];
-    const KEY_UP = 87;   // W
-    const KEY_DOWN = 83; // S
-    const KEY_UP2 = 38;  // Arrow Up
-    const KEY_DOWN2 = 40; // Arrow Down
-
-    window.addEventListener('keydown', (e) => { keypress[e.keyCode] = true; });
-    window.addEventListener('keyup', (e) => { keypress[e.keyCode] = false; });
-
-    function movePaddles() {
-        if (keypress[KEY_UP]) paddle1.pos.y -= paddle1.speed.y;
-        if (keypress[KEY_DOWN]) paddle1.pos.y += paddle1.speed.y;
-        if (keypress[KEY_UP2]) paddle2.pos.y -= paddle2.speed.y;
-        if (keypress[KEY_DOWN2]) paddle2.pos.y += paddle2.speed.y;
-    }
-
-    function updateGame() {
-        movePaddles();
-        ball.update();
-    }
-
-    gameLoop(); // Start the game loop
+    gameLoop();
 </script>
 </body>
-</html>
-
 {% endblock %}
+</html>
 
