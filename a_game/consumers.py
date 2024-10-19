@@ -1,5 +1,3 @@
-# consumers.py
-
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
@@ -11,11 +9,9 @@ class PongGameConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
-        # Receive movement data from the frontend
         text_data_json = json.loads(text_data)
-        paddle_direction = text_data_json['direction']  # "up" or "down"
+        paddle_direction = text_data_json['direction']
         
-        # Broadcast the direction to all clients
         await self.channel_layer.group_send(
             "pong_game",
             {
@@ -26,7 +22,6 @@ class PongGameConsumer(AsyncWebsocketConsumer):
 
     async def paddle_move(self, event):
         direction = event['direction']
-        # Send the direction back to the WebSocket client
         await self.send(text_data=json.dumps({
             'direction': direction
         }))
