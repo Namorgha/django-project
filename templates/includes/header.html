@@ -2,22 +2,52 @@
     <div>
         <a class="flex items-center gap-2" href="/">
             <img class="h-6" src="/static/images/logo.svg" alt="Logo"/>
-            <span class="text-xl font-bold">Project Title</span> <!-- Increased text size -->
+            <span class="text-xl font-bold">Project Title</span>
         </a>
     </div>
     <nav class="relative">
         <ul class="navitems flex items-center justify-center h-full space-x-6">
-          {% if request.path != '/game/' %}
-          <li class="relative z-10">
-            <a href="{% url 'game' %}" class="relative">Play</a>
-          </li>
-          {% endif %}
-          {% if request.path != '/' %}
-          <li class="relative z-10" >
-            <a href="{% url 'home' %}">Home</a>
-          </li>
-          {% endif %}
 
+            <!-- Play Dropdown - Conditionally rendered when not on '/game/' -->
+            {% if request.path != '/game/' %}
+            <li x-data="{ dropdownOpen: false }" class="relative z-10">
+                <a @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="flex items-center cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 text-lg">
+                    <span>Play</span>
+                    <img class="w-4 ml-1" src="https://img.icons8.com/small/32/777777/expand-arrow.png" alt="Expand"/>
+                </a>
+                <div x-show="dropdownOpen" x-cloak class="absolute right-0 bg-white text-black shadow-lg rounded-lg w-60 p-2 z-20"
+                     x-transition:enter="duration-300 ease-out"
+                     x-transition:enter-start="opacity-0 -translate-y-5 scale-90"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+                    <div class="p-2">
+                        <h3 class="font-bold text-lg">Available Games</h3>
+                        <hr>
+                        <ul class="hoverlist">
+                            <!-- Loop through available games dynamically -->
+                            {% for game in available_games %}
+                                <li>
+                                    <a class="leading-5 text-right hover:text-blue-600 text-lg" href="{% url 'game' game.room_name %}">{{ game.room_name|slice:":30" }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="p-2 border-t border-gray-300">
+                        <a href="{% url 'create_gameroom' %}" class="block text-lg hover:bg-gray-200 px-4 py-2 rounded-lg">
+                            Create New Game
+                        </a>
+                    </div>
+                </div>
+            </li>
+            {% endif %}
+
+            <!-- Home Link - Conditionally rendered when not on '/' -->
+            {% if request.path != '/' %}
+            <li class="relative z-10">
+                <a href="{% url 'home' %}" class="relative px-4 py-2 hover:bg-gray-700 transition duration-200 text-lg">Home</a>
+            </li>
+            {% endif %}
+
+            <!-- Chat Dropdown -->
             <li x-data="{ dropdownOpen: false }" class="relative">
                 <a @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="flex items-center cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 text-lg">
                     <span>Chat</span>
@@ -27,15 +57,18 @@
                      x-transition:enter="duration-300 ease-out"
                      x-transition:enter-start="opacity-0 -translate-y-5 scale-90"
                      x-transition:enter-end="opacity-100 translate-y-0 scale-100">
-                    
                     <div class="p-2">
-                        <h3 class="font-bold text-lg">Public Chatrooms</h3> <!-- Increased text size -->
                         <ul class="hoverlist">
-                          <li><a href="{% url 'chat' %}">Public Chat</a></li>
+                            <li><a class="block px-4 py-2 hover:bg-gray-200 font-bold text-lg" href="{% url 'new-groupchat' %}">Create Chat</a></li>
+                            <hr>
+                        </ul>
+                        <h3 class="font-bold text-lg">Public Chatrooms</h3>
+                        <ul class="hoverlist">
+                            <li><a href="{% url 'chat' %}">Public Chat</a></li>
                             {% for chatroom in user.chat_groups.all %}
                                 {% if chatroom.groupchat_name and not chatroom.is_private %}
                                     <li>
-                                        <a class="leading-5 text-right hover:text-blue-600 text-lg" href="{% url 'chatroom' chatroom.group_name %}">{{ chatroom.groupchat_name|slice:":30" }}</a> <!-- Increased text size -->
+                                        <a class="leading-5 text-right hover:text-blue-600 text-lg" href="{% url 'chatroom' chatroom.group_name %}">{{ chatroom.groupchat_name|slice:":30" }}</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
@@ -43,14 +76,14 @@
                     </div>
                     
                     <div class="p-2 border-t border-gray-300">
-                        <h3 class="font-bold text-lg">Private Chats</h3> <!-- Increased text size -->
+                        <h3 class="font-bold text-lg">Private Chats</h3>
                         <ul class="hoverlist">
                             {% for chatroom in user.chat_groups.all %}
                                 {% if chatroom.is_private %}
                                     <li>
                                         {% for member in chatroom.members.all %}
                                             {% if member != user %}
-                                                <a class="leading-5 text-right hover:text-blue-600 text-lg" href="{% url 'chatroom' chatroom.group_name %}">{{ member.profile.name }}</a> <!-- Increased text size -->
+                                                <a class="leading-5 text-right hover:text-blue-600 text-lg" href="{% url 'chatroom' chatroom.group_name %}">{{ member.profile.name }}</a>
                                             {% endif %}
                                         {% endfor %}
                                     </li>
@@ -61,8 +94,9 @@
                 </div>
             </li>
 
+            <!-- Profile Dropdown -->
             <li x-data="{ dropdownOpen: false }" class="relative">
-                <a @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="flex items-center cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 text-lg"> <!-- Increased text size -->
+                <a @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="flex items-center cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 text-lg">
                     <img class="h-8 w-8 rounded-full object-cover" src="{{ user.profile.avatar }}" alt="User Avatar"/>
                     <span class="ml-2">{{ user.profile.name }}</span>
                     <img x-bind:class="dropdownOpen && 'rotate-180 duration-300'" class="w-4 ml-1" src="https://img.icons8.com/small/32/777777/expand-arrow.png" alt="Expand"/>
@@ -72,14 +106,14 @@
                      x-transition:enter-start="opacity-0 -translate-y-5 scale-90"
                      x-transition:enter-end="opacity-100 translate-y-0 scale-100">
                     <ul class="hoverlist">
-                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'profile' %}">My Profile</a></li> <!-- Increased text size -->
-                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'profile-edit' %}">Edit Profile</a></li> <!-- Increased text size -->
-                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'new-groupchat' %}">Create Chat</a></li> <!-- Increased text size -->
-                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'profile-settings' %}">Settings</a></li> <!-- Increased text size -->
-                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'account_logout' %}">Log Out</a></li> <!-- Increased text size -->
+                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'profile' %}">My Profile</a></li>
+                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'profile-edit' %}">Edit Profile</a></li>
+                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'profile-settings' %}">Settings</a></li>
+                        <li><a class="block px-4 py-2 hover:bg-gray-200 text-lg" href="{% url 'account_logout' %}">Log Out</a></li>
                     </ul>
                 </div>
             </li>
+
         </ul>
     </nav>
 </header>

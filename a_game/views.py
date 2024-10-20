@@ -9,90 +9,38 @@ from .models import *
 from .forms import *
 
 @login_required
-def game_view(request, gamegroup_name='Ping-Pong'):
-    # Try to get or create the GameRoom based on the gamegroup_name
-    game_group, created = GameRoom.objects.get_or_create(
-        gamegroup_name=gamegroup_name,
-        defaults={
-            'game_name': gamegroup_name,  # Set default values if creating a new room
-            'is_private': True,  # Adjust this as needed
-        }
-    )
-
-    if created:
-        # If the room was created, only add the current logged-in user
-        game_group.players.add(request.user)
-        messages.success(request, f"GameRoom '{gamegroup_name}' created, and you have been added as a player.")
+def game_view(request, group_name='Ping-Pong'):
+    game_room = get_object_or_404(GameModel, room_name=group_name)
+    
+    print(f"Before adding, players in the room: {game_room.players.all()}")  # Check existing players
+    if request.user not in game_room.players.all():
+        if game_room.players.all().count() != 2: 
+            game_room.players.add(request.user)
+            print(f"Added {request.user} to the players of {game_room.room_name}")
+        else:
+            print(f"{request.user} is already a player in the room")
     else:
-        # Welcome the user to the existing game room
-        messages.info(request, f"Welcome to the existing GameRoom '{gamegroup_name}'.")
-
-    # Get or create a game in the room for this game group
-    game = Game.objects.filter(room__game_name=game_group.gamegroup_name).first()
-
-    # Instantiate forms (for creating goals and new games)
-    goal_form = GameGoalsForm(request.POST or None)
-    new_game_form = NewGameForm(request.POST or None)
-
-    # Handle the goal submission form
-    if request.method == 'POST' and 'submit_goal' in request.POST:
-        if goal_form.is_valid():
-            goal = goal_form.save(commit=False)
-            goal.game = game  # Attach the goal to the ongoing game
-            goal.save()
-            messages.success(request, "Goal added successfully!")
-            return redirect('game_view', gamegroup_name=game_group.gamegroup_name)
-
-    # Handle the new game group form
-    elif request.method == 'POST' and 'start_new_game' in request.POST:
-        if new_game_form.is_valid():
-            new_game_group = new_game_form.save(commit=False)
-            new_game_group.save()
-            new_game_group.players.add(request.user)  # Add only the current user as a player
-            messages.success(request, "New game group created successfully!")
-            return redirect('game_view', gamegroup_name=new_game_group.gamegroup_name)
-
-    # Check if the game is finished
-    if game and game.is_finished:
-        game.set_winner()  # Set the winner if the game is finished
-        messages.info(request, f"The game is finished. {game.winner} won!")
-
-    # Fetch relevant game data
-    players = game.players.all() if game else []
-    goals = Goal.objects.filter(game=game) if game else []
-
-    # Find the other user in the game group (if applicable)
-    other_user = next((player for player in game_group.players.all() if player != request.user), None)
-
-    # Render the game view with context
-    return render(request, 'a_game/game.html', {
-        'game_group': game_group,
-        'game': game,
-        'players': players,
-        'goals': goals,
-        'other_user': other_user,
-        'goal_form': goal_form,
-        'new_game_form': new_game_form,
-    })
-
+        return render(request, 'a_game/gameisfull.html', {'game_room' : game_room })
+    
+    print(f"After addingplayers in the room: {game_room.players.all()}")  # Check updated players
+    
+    return render(request, 'a_game/game.html', {'game_room': game_room})
 
 @login_required
-def check_or_create_game_room(request, gamegroup_name='Ping-Pong'):
-    # Attempt to get or create a GameRoom based on the gamegroup_name
-    game_group, created = GameRoom.objects.get_or_create(
-        gamegroup_name=gamegroup_name,
-        defaults={
-            'game_name': gamegroup_name,
-            'is_private': False,
-        }
-    )
+def create_gameroom(request):
+    form = NewGameForm()
 
-    if created:
-        # If the room was created, add the current user to the room
-        game_group.players.add(request.user)
-        messages.success(request, f"GameRoom '{gamegroup_name}' has been created and you have been added as a player.")
-    else:
-        messages.info(request, f"GameRoom '{gamegroup_name}' already exists.")
+    if request.method == 'POST':
+        form = NewGameForm(request.POST)
+        if form.is_valid():
+            # Save the new game room but don't add the creator as a player yet
+            new_gameroom = form.save(commit=False)
+            new_gameroom.save()
 
-    # Redirect to the game_view passing the gamegroup_name as a parameter
-    return redirect('game_view', gamegroup_name=game_group.gamegroup_name)
+            # Redirect to the game view where players will be added when accessing
+            return redirect('game', group_name=new_gameroom.room_name)
+    
+    context = {
+        'form': form
+    }
+    return render(request, 'a_game/create_gameroom.html', context)
