@@ -10,7 +10,7 @@ class NewGameForm(ModelForm):
             "room_name": forms.TextInput(attrs={
                 'placeholder': 'Add name ...',
                 'class': 'p-4 text-black',
-                'maxlength': '300',  # Match the model's max_length
+                'maxlength': '300',  
                 'autofocus': True,
             }),
         }

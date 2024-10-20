@@ -33,9 +33,9 @@
         }
         #canvas {
           position: absolute;
-          top: 50px; /* Adjust to avoid overlapping with navbar */
+          top: 50px; 
           width: 100%;
-          height: calc(100% - 50px); /* Adjust height accordingly */
+          height: calc(100% - 50px); 
         }
     </style>
 </head>
@@ -49,7 +49,7 @@
     const ctx = canvas.getContext('2d');
     
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - 50; // Adjust for navbar height
+    canvas.height = window.innerHeight - 50; 
 
     const keypress = [];
     const KEY_UP = 87;   // W
@@ -57,14 +57,12 @@
     const KEY_UP2 = 38;  // Arrow Up
     const KEY_DOWN2 = 40; // Arrow Down
 
-    // WebSocket connection
     const socket = new WebSocket('ws://' + window.location.host + '/ws/game/');
 
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
         const direction = data.direction;
 
-        // Update paddle movement based on WebSocket direction
         if (direction === 'up') {
             paddle1.pos.y -= paddle1.speed.y;
         } else if (direction === 'down') {
@@ -76,7 +74,6 @@
     window.addEventListener('keydown', (e) => { 
         keypress[e.keyCode] = true; 
         
-        // Send paddle movement to the WebSocket
         if (e.keyCode === KEY_UP || e.keyCode === KEY_DOWN) {
             const direction = e.keyCode === KEY_UP ? 'up' : 'down';
             socket.send(JSON.stringify({

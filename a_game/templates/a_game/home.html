@@ -1,4 +1,3 @@
-<!-- home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +9,8 @@
     <h1>Welcome to the Pong Game</h1>
     <p>Create or Join a Game Room:</p>
 
-    <form method="POST">  <!-- Use POST method to submit data -->
-        {% csrf_token %}  <!-- Include CSRF token for security -->
+    <form method="POST">  
+        {% csrf_token %}  
         <input type="text" name="room_name" placeholder="Enter room name" required>
         <button type="submit">Join Game</button>
     </form>

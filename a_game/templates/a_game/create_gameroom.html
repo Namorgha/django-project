@@ -3,7 +3,6 @@
 {% block content %}
 <h1>Create a New Game Group</h1>
 
-<!-- Error handling block -->
 {% if form.errors %}
     <div class="text-red-600">
         <ul>
@@ -19,10 +18,9 @@
     </div>
 {% endif %}
 
-<!-- Form rendering -->
 <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }} <!-- Temporarily using as_p to debug form rendering -->
+    {{ form.as_p }} 
     <button class="mt-2" type="submit">Create Group</button>
 </form>
 {% endblock %}
