@@ -5,9 +5,9 @@ from .models import *
 class NewGameForm(ModelForm):
     class Meta:
         model = GameModel
-        fields = ['room_name']
+        fields = ['gameroom_name']
         widgets = {
-            "room_name": forms.TextInput(attrs={
+            "gameroom_name": forms.TextInput(attrs={
                 'placeholder': 'Add name ...',
                 'class': 'p-4 text-black',
                 'maxlength': '300',  

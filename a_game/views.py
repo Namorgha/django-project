@@ -9,34 +9,42 @@ from .models import *
 from .forms import *
 
 @login_required
-def game_view(request, group_name='Ping-Pong'):
-    game_room = get_object_or_404(GameModel, room_name=group_name)
-    
-    print(f"Before adding, players in the room: {game_room.players.all()}")
+def game_view(request, group_name="Ping-Pong"):
+    game_room = get_object_or_404(GameModel, gameroom_name=group_name)
+
     if request.user not in game_room.players.all():
-        if game_room.players.all().count() != 2: 
+        if game_room.players.count() < 2:
             game_room.players.add(request.user)
-            print(f"Added {request.user} to the players of {game_room.room_name}")
+            print(f"Added {request.user} to the players of {game_room.gameroom_name}")
         else:
-            print(f"{request.user} is already a player in the room")
+            return render(request, 'a_game/gameisfull.html', {'game_room': game_room})
     else:
-        return render(request, 'a_game/gameisfull.html', {'game_room' : game_room })
-    
-    print(f"After addingplayers in the room: {game_room.players.all()}")     
+        print(f"{request.user} is already a player in the room.")
+
     return render(request, 'a_game/game.html', {'game_room': game_room})
+
 
 @login_required
 def create_gameroom(request):
-    form = NewGameForm()
-
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         if form.is_valid():
+            gameroom_name = form.cleaned_data['gameroom_name']
+            # Check if the gameroom name already exists
+            if GameModel.objects.filter(gameroom_name=gameroom_name).exists():
+                messages.error(request, 'This game room name already exists. Please choose another one.')
+                return render(request, 'a_game/create_gameroom.html', {'form': form})
+            
             new_gameroom = form.save(commit=False)
             new_gameroom.save()
-            return redirect('game', group_name=new_gameroom.room_name)
-    
+            new_gameroom.players.add(request.user)
+            return redirect('game', group_name=new_gameroom.gameroom_name)
+
+    else:
+        form = NewGameForm()  # Initialize form on GET request
+
     context = {
         'form': form
     }
     return render(request, 'a_game/create_gameroom.html', context)
+
