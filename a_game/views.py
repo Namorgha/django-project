@@ -40,6 +40,7 @@ def create_gameroom(request):
             new_gameroom.players.add(request.user)
             return redirect('game', group_name=new_gameroom.gameroom_name)
 
+
     else:
         form = NewGameForm()  # Initialize form on GET request
 
