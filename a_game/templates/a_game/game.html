@@ -99,13 +99,14 @@ function drawNet() {
 }
 
 function drawGame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawRect(0, 0, canvas.width, canvas.height, '#000');
   drawNet();
   drawRect(0, player1Y, paddleWidth, paddleHeight, '#fff');
   drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#fff');
   drawCircle(ballX, ballY, ballSize, '#fff');
-  drawText(player1Score, canvas.width / 4, canvas.height / 5, '#fff');
-  drawText(player2Score, 3 * canvas.width / 4, canvas.height / 5, '#fff');
+  // drawText(player1Score, canvas.width / 4, canvas.height / 5, '#fff');
+  // drawText(player2Score, 3 * canvas.width / 4, canvas.height / 5, '#fff');
 }
 
 function resetBall() {
