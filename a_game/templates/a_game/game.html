@@ -48,8 +48,8 @@ const netWidth = 4;
 const paddleWidth = 10;
 const paddleHeight = 100;
 const ballSize = 10;
-const paddleSpeed = 10;
-const ballSpeed = 5;
+const paddleSpeed = 400; // Adjusted for smoother time-based movement
+const ballSpeed = 300;   // Adjusted for smoother time-based movement
 
 let ballX = canvas.width / 2 - ballSize / 2;
 let ballY = canvas.height / 2 - ballSize / 2;
@@ -112,34 +112,39 @@ function resetBall() {
   ballX = canvas.width / 2 - ballSize / 2;
   ballY = canvas.height / 2 - ballSize / 2;
   ballSpeedX = -ballSpeedX;
-  ballSpeedY = 3 * (Math.random() * 2 - 1);
+  ballSpeedY = 300 * (Math.random() * 2 - 1);  // Adjust speed and angle
 }
 
-function movePaddles() {
+function movePaddles(deltaTime) {
+  const paddleMoveDistance = paddleSpeed * deltaTime;
+
   // Move paddle1 (W and S keys) only if this player is assigned 'paddle1'
   if (myPaddle === 'paddle1') {
     if (keysPressed['ArrowUp']) {  // Move paddle1 up
-      player1Y = Math.max(player1Y - paddleSpeed, 0);
+      player1Y = Math.max(player1Y - paddleMoveDistance, 0);
     }
     if (keysPressed['ArrowDown']) {  // Move paddle1 down
-      player1Y = Math.min(player1Y + paddleSpeed, canvas.height - paddleHeight);
+      player1Y = Math.min(player1Y + paddleMoveDistance, canvas.height - paddleHeight);
     }
   }
 
   // Move paddle2 (Arrow keys) only if this player is assigned 'paddle2'
   if (myPaddle === 'paddle2') {
     if (keysPressed['ArrowUp']) {  // Move paddle2 up
-      player2Y = Math.max(player2Y - paddleSpeed, 0);
+      player2Y = Math.max(player2Y - paddleMoveDistance, 0);
     }
     if (keysPressed['ArrowDown']) {  // Move paddle2 down
-      player2Y = Math.min(player2Y + paddleSpeed, canvas.height - paddleHeight);
+      player2Y = Math.min(player2Y + paddleMoveDistance, canvas.height - paddleHeight);
     }
   }
 }
 
-function moveBall() {
-  ballX += ballSpeedX;
-  ballY += ballSpeedY;
+function moveBall(deltaTime) {
+  const ballMoveDistanceX = ballSpeedX * deltaTime;
+  const ballMoveDistanceY = ballSpeedY * deltaTime;
+
+  ballX += ballMoveDistanceX;
+  ballY += ballMoveDistanceY;
 
   if (ballY <= 0 || ballY + ballSize >= canvas.height) {
     ballSpeedY = -ballSpeedY;
@@ -164,13 +169,24 @@ function moveBall() {
   }
 }
 
-function updateGame() {
-  moveBall();
-  movePaddles();  // Update paddle movement based on keyboard input
+// Game loop with requestAnimationFrame and deltaTime
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+  if (!lastTime) {
+    lastTime = timestamp;
+  }
+  const deltaTime = (timestamp - lastTime) / 1000;  // Convert to seconds
+  lastTime = timestamp;
+
+  moveBall(deltaTime);
+  movePaddles(deltaTime);
   drawGame();
+
+  requestAnimationFrame(gameLoop);
 }
 
-setInterval(updateGame, 1000 / 60);
+requestAnimationFrame(gameLoop);
 
 // WebSocket connection to send and receive game state
 var roomname = "{{ game_room.gameroom_name }}";
@@ -206,9 +222,9 @@ ws.onerror = (error) => {
   console.error(error);
 };
 
-// Update the game state and send it to the WebSocket server every 60 frames
+// Send game state to WebSocket server
 setInterval(() => {
-  if (myPaddle) {  // Only send state if the player has been assigned a paddle
+  if (myPaddle) {
     const gameState = {
       player1Y: player1Y,
       player2Y: player2Y,
@@ -218,7 +234,6 @@ setInterval(() => {
       player2Score: player2Score
     };
 
-    console.log("Sending game state:", gameState);
     ws.send(JSON.stringify(gameState));
   }
 }, 1000 / 60);
