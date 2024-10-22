@@ -59,6 +59,19 @@ let player1Y = canvas.height / 2 - paddleHeight / 2;
 let player2Y = canvas.height / 2 - paddleHeight / 2;
 let player1Score = 0;
 let player2Score = 0;
+let myPaddle = null;  // Player's paddle, assigned from the server ('paddle1' or 'paddle2')
+
+// Track keys pressed for keyboard movement
+let keysPressed = {};
+
+// Keyboard event listeners to track key states
+document.addEventListener('keydown', (e) => {
+  keysPressed[e.key] = true;
+});
+
+document.addEventListener('keyup', (e) => {
+  keysPressed[e.key] = false;
+});
 
 function drawRect(x, y, w, h, color) {
   ctx.fillStyle = color;
@@ -103,16 +116,24 @@ function resetBall() {
 }
 
 function movePaddles() {
-  if (player1Y <= 0) {
-    player1Y = 0;
-  } else if (player1Y >= canvas.height - paddleHeight) {
-    player1Y = canvas.height - paddleHeight;
+  // Move paddle1 (W and S keys) only if this player is assigned 'paddle1'
+  if (myPaddle === 'paddle1') {
+    if (keysPressed['ArrowUp']) {  // Move paddle1 up
+      player1Y = Math.max(player1Y - paddleSpeed, 0);
+    }
+    if (keysPressed['ArrowDown']) {  // Move paddle1 down
+      player1Y = Math.min(player1Y + paddleSpeed, canvas.height - paddleHeight);
+    }
   }
 
-  if (player2Y <= 0) {
-    player2Y = 0;
-  } else if (player2Y >= canvas.height - paddleHeight) {
-    player2Y = canvas.height - paddleHeight;
+  // Move paddle2 (Arrow keys) only if this player is assigned 'paddle2'
+  if (myPaddle === 'paddle2') {
+    if (keysPressed['ArrowUp']) {  // Move paddle2 up
+      player2Y = Math.max(player2Y - paddleSpeed, 0);
+    }
+    if (keysPressed['ArrowDown']) {  // Move paddle2 down
+      player2Y = Math.min(player2Y + paddleSpeed, canvas.height - paddleHeight);
+    }
   }
 }
 
@@ -145,40 +166,11 @@ function moveBall() {
 
 function updateGame() {
   moveBall();
-  movePaddles();
+  movePaddles();  // Update paddle movement based on keyboard input
   drawGame();
 }
 
-function movePaddle(e) {
-  const rect = canvas.getBoundingClientRect();
-  const mouseY = e.clientY - rect.top - paddleHeight / 2;
-
-  if (e.clientY > rect.top && e.clientY < rect.bottom) {
-    if (e.clientY < player1Y + paddleHeight / 2) {
-      player1Y -= paddleSpeed;
-    } else {
-      player1Y += paddleSpeed;
-    }
-  }
-}
-
-document.addEventListener('mousemove', movePaddle);
-
 setInterval(updateGame, 1000 / 60);
-
-setInterval(() => {
-  const gameState = {
-    player1Y: player1Y,
-    player2Y: player2Y,
-    ballX: ballX,
-    ballY: ballY,
-    player1Score: player1Score,
-    player2Score: player2Score
-  };
-
-  console.log("Sending game state:", gameState);  // Log the game state to ensure it's being sent
-  ws.send(JSON.stringify(gameState));
-}, 1000 / 60);
 
 // WebSocket connection to send and receive game state
 var roomname = "{{ game_room.gameroom_name }}";
@@ -191,13 +183,19 @@ ws.onopen = () => {
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
 
-  console.log("Received game state:", data);
-  player1Y = data.player1Y;
-  player2Y = data.player2Y;
-  ballX = data.ballX;
-  ballY = data.ballY;
-  player1Score = data.player1Score;
-  player2Score = data.player2Score;
+  // Handle paddle assignment
+  if (data.paddle) {
+    myPaddle = data.paddle;  // Either 'paddle1' or 'paddle2'
+    console.log("Assigned to:", myPaddle);
+  }
+
+  // Handle game state updates (positions of paddles, ball, etc.)
+  if (data.player1Y !== undefined && data.player2Y !== undefined) {
+    player1Y = data.player1Y;
+    player2Y = data.player2Y;
+    ballX = data.ballX;
+    ballY = data.ballY;
+  }
 };
 
 ws.onclose = () => {
@@ -210,17 +208,19 @@ ws.onerror = (error) => {
 
 // Update the game state and send it to the WebSocket server every 60 frames
 setInterval(() => {
-  const gameState = {
-    player1Y: player1Y,
-    player2Y: player2Y,
-    ballX: ballX,
-    ballY: ballY,
-    player1Score: player1Score,
-    player2Score: player2Score
-  };
+  if (myPaddle) {  // Only send state if the player has been assigned a paddle
+    const gameState = {
+      player1Y: player1Y,
+      player2Y: player2Y,
+      ballX: ballX,
+      ballY: ballY,
+      player1Score: player1Score,
+      player2Score: player2Score
+    };
 
-  console.log("Sending game state:", gameState);
-  ws.send(JSON.stringify(gameState));
+    console.log("Sending game state:", gameState);
+    ws.send(JSON.stringify(gameState));
+  }
 }, 1000 / 60);
 
 </script>

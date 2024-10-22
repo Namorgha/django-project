@@ -1,78 +1,67 @@
-from channels.generic.websocket import WebsocketConsumer
-from django.template.loader import render_to_string
-from django.shortcuts import get_object_or_404
-from asgiref.sync import async_to_sync
-from .models import *
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 
-
-# now we will receive the data from the websocket and then html that send to as the websocket
-class GameConsumer(WebsocketConsumer):
-    def connect(self):
-        # Get room_name from the URL
+class GameConsumer(AsyncWebsocketConsumer):
+    players = 0  # Class variable to keep track of the number of players
+    
+    async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['group_name']
-        self.room_group_name = 'game_%s' % self.room_name
+        self.room_group_name = f'game_{self.room_name}'
 
-        # Join room group (synchronous consumer -> async call)
-        async_to_sync(self.channel_layer.group_add)(
+        # Add the player to the group
+        await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
-
-        # Accept the WebSocket connection
-        self.accept()
-
-    def disconnect(self, close_code):
-        # Leave room group (synchronous consumer -> async call)
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
-
-def receive(self, text_data):
-    print("hellooooooooo    ")
-    print(f"Received WebSocket data: {text_data}")
-    try:
-        # Try to parse the incoming WebSocket data
-        text_data_json = json.loads(text_data)
         
-        # Check if 'message' exists in the JSON data
-        message = text_data_json.get('message')
-        
-        if message is None:
-            # If the message is missing, you could log an error or send an error response
-            self.send(text_data=json.dumps({
-                'error': 'No message key found in the incoming data'
-            }))
+        await self.accept()
+
+        # Track number of players and assign paddle
+        GameConsumer.players += 1
+        if GameConsumer.players == 1:
+            self.paddle = 'paddle1'
+        elif GameConsumer.players == 2:
+            self.paddle = 'paddle2'
+        else:
+            # Reject if more than 2 players try to connect
+            await self.close()
             return
 
-        # Retrieve the game room and append the message to the game log
-        game_room = get_object_or_404(GameModel, gameroom_name=self.room_name)
-        game_room.game_log += f"{message}\n"
-        game_room.save()
+        # Send paddle assignment to the client
+        await self.send(text_data=json.dumps({
+            'paddle': self.paddle
+        }))
 
-        # Send the message to the room group
-        async_to_sync(self.channel_layer.group_send)(
+    async def disconnect(self, close_code):
+        # Decrease the number of players
+        GameConsumer.players -= 1
+
+        # Remove the player from the group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        # Process incoming game state from clients
+        text_data_json = json.loads(text_data)
+        player1Y = text_data_json.get('player1Y')
+        player2Y = text_data_json.get('player2Y')
+        ballX = text_data_json.get('ballX')
+        ballY = text_data_json.get('ballY')
+
+        # Broadcast the updated game state to the group
+        await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'game_message',
-                'message': message
+                'type': 'game_state',
+                'player1Y': player1Y,
+                'player2Y': player2Y,
+                'ballX': ballX,
+                'ballY': ballY,
             }
         )
-    
-    except json.JSONDecodeError:
-        # Handle cases where the incoming data is not valid JSON
-        self.send(text_data=json.dumps({
-            'error': 'Invalid JSON data received'
-        }))
 
-
-    # Receive message from the room group
-    def game_message(self, event):
-        # Extract the message from the event
-        message = event['message']
-
-        # Send the message back to the WebSocket
-        self.send(text_data=json.dumps({
-            'message': message
-        }))
+    async def game_state(self, event):
+        # Send the game state back to WebSocket clients
+        await self.send(text_data=json.dumps(event))
