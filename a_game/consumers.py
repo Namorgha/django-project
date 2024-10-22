@@ -29,7 +29,6 @@ class GameConsumer(WebsocketConsumer):
             self.channel_name
         )
 
-    # Receive message from WebSocket
 def receive(self, text_data):
     print("hellooooooooo    ")
     print(f"Received WebSocket data: {text_data}")
