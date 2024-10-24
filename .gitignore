@@ -1,3 +1,5 @@
+db.sqlite3
+venv/
 pass.txt
 git_auto.py 
 .env
