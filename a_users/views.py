@@ -6,6 +6,15 @@ from django.contrib.auth import logout
 from django.contrib import messages
 from django.urls import reverse
 from .forms import *
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+class ProtectedView(APIView):
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
+
+    def get(self, request):
+        return Response({'message': 'This is a protected view'})
 
 
 def profile_view(request, username=None):

@@ -193,6 +193,21 @@ requestAnimationFrame(gameLoop);
 var roomname = "{{ game_room.gameroom_name }}";
 const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
 
+ws.onopen = function () {
+    console.log("WebSocket connection established");
+};
+
+ws.onerror = function (error) {
+    console.error("WebSocket error:", error);
+};
+
+ws.onclose = function (event) {
+    console.log("WebSocket connection closed:", event);
+    console.log("Code:", event.code); // Shows the close code
+    console.log("Reason:", event.reason); // Provides any additional reason given
+};
+
+
 ws.onopen = () => {
   console.log('Connected to the server');
 };
