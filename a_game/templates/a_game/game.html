@@ -8,36 +8,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ping Pong</title>
     <style>
-        * { 
-          margin: 0;
-          padding: 0;
-        }
-        body { 
-          overflow: hidden;
-          font-family: Arial, sans-serif;
-          background-color: #1F3A1F;
-        }
-        #player1 { 
-          margin-right: 100px;
-        }
-        #player2 {
-          margin-left: 100px;
-        }
-        #canvas {
-          position: absolute;
-          top: 50px; 
-          width: 100%;
-          height: calc(100% - 50px); 
-        }
+        * { margin: 0; padding: 0; }
+        body { overflow: hidden; font-family: Arial, sans-serif; background-color: #1F3A1F; }
+        #canvas { position: absolute; top: 50px; width: 100%; height: calc(100% - 50px); }
     </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
-<h1 id="player1">0</h1>
-<h1 id="player2">0</h1>
 
 <script>
-// Create a canvas and draw the game on the canvas
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -48,8 +27,8 @@ const netWidth = 4;
 const paddleWidth = 10;
 const paddleHeight = 100;
 const ballSize = 10;
-const paddleSpeed = 400; // Adjusted for smoother time-based movement
-const ballSpeed = 300;   // Adjusted for smoother time-based movement
+const paddleSpeed = 400;
+const ballSpeed = 300;
 
 let ballX = canvas.width / 2 - ballSize / 2;
 let ballY = canvas.height / 2 - ballSize / 2;
@@ -59,200 +38,102 @@ let player1Y = canvas.height / 2 - paddleHeight / 2;
 let player2Y = canvas.height / 2 - paddleHeight / 2;
 let player1Score = 0;
 let player2Score = 0;
-let myPaddle = null;  // Player's paddle, assigned from the server ('paddle1' or 'paddle2')
-
-// Track keys pressed for keyboard movement
+let myPaddle = null;  // 'paddle1' or 'paddle2'
 let keysPressed = {};
 
-// Keyboard event listeners to track key states
-document.addEventListener('keydown', (e) => {
-  keysPressed[e.key] = true;
-});
+// Track key states
+document.addEventListener('keydown', (e) => keysPressed[e.key] = true);
+document.addEventListener('keyup', (e) => keysPressed[e.key] = false);
 
-document.addEventListener('keyup', (e) => {
-  keysPressed[e.key] = false;
-});
-
-function drawRect(x, y, w, h, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
-}
-
-function drawCircle(x, y, r, color) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2, false);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawText(text, x, y, color) {
-  ctx.fillStyle = color;
-  ctx.font = '45px sans-serif';
-  ctx.fillText(text, x, y);
-}
-
-function drawNet() {
-  for (let i = 0; i <= canvas.height; i += 15) {
-    drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff');
-  }
-}
+function drawRect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); }
+function drawCircle(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2, false); ctx.closePath(); ctx.fill(); }
+function drawNet() { for (let i = 0; i <= canvas.height; i += 15) drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff'); }
 
 function drawGame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawRect(0, 0, canvas.width, canvas.height, '#000');
-  drawNet();
-  drawRect(0, player1Y, paddleWidth, paddleHeight, '#fff');
-  drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#fff');
-  drawCircle(ballX, ballY, ballSize, '#fff');
-  // drawText(player1Score, canvas.width / 4, canvas.height / 5, '#fff');
-  // drawText(player2Score, 3 * canvas.width / 4, canvas.height / 5, '#fff');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawRect(0, 0, canvas.width, canvas.height, '#000');
+    drawNet();
+    drawRect(0, player1Y, paddleWidth, paddleHeight, '#fff');
+    drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#fff');
+    drawCircle(ballX, ballY, ballSize, '#fff');
 }
 
 function resetBall() {
-  ballX = canvas.width / 2 - ballSize / 2;
-  ballY = canvas.height / 2 - ballSize / 2;
-  ballSpeedX = -ballSpeedX;
-  ballSpeedY = 300 * (Math.random() * 2 - 1);  // Adjust speed and angle
+    ballX = canvas.width / 2 - ballSize / 2;
+    ballY = canvas.height / 2 - ballSize / 2;
+    ballSpeedX = -ballSpeedX;
+    ballSpeedY = 300 * (Math.random() * 2 - 1);
 }
 
 function movePaddles(deltaTime) {
-  const paddleMoveDistance = paddleSpeed * deltaTime;
-
-  // Move paddle1 (W and S keys) only if this player is assigned 'paddle1'
-  if (myPaddle === 'paddle1') {
-    if (keysPressed['ArrowUp']) {  // Move paddle1 up
-      player1Y = Math.max(player1Y - paddleMoveDistance, 0);
+    const paddleMoveDistance = paddleSpeed * deltaTime;
+    if (myPaddle === 'paddle1') {
+        if (keysPressed['ArrowUp']) player1Y = Math.max(player1Y - paddleMoveDistance, 0);
+        if (keysPressed['ArrowDown']) player1Y = Math.min(player1Y + paddleMoveDistance, canvas.height - paddleHeight);
+    } else if (myPaddle === 'paddle2') {
+        if (keysPressed['ArrowUp']) player2Y = Math.max(player2Y - paddleMoveDistance, 0);
+        if (keysPressed['ArrowDown']) player2Y = Math.min(player2Y + paddleMoveDistance, canvas.height - paddleHeight);
     }
-    if (keysPressed['ArrowDown']) {  // Move paddle1 down
-      player1Y = Math.min(player1Y + paddleMoveDistance, canvas.height - paddleHeight);
-    }
-  }
-
-  // Move paddle2 (Arrow keys) only if this player is assigned 'paddle2'
-  if (myPaddle === 'paddle2') {
-    if (keysPressed['ArrowUp']) {  // Move paddle2 up
-      player2Y = Math.max(player2Y - paddleMoveDistance, 0);
-    }
-    if (keysPressed['ArrowDown']) {  // Move paddle2 down
-      player2Y = Math.min(player2Y + paddleMoveDistance, canvas.height - paddleHeight);
-    }
-  }
 }
 
 function moveBall(deltaTime) {
-  const ballMoveDistanceX = ballSpeedX * deltaTime;
-  const ballMoveDistanceY = ballSpeedY * deltaTime;
+    const ballMoveDistanceX = ballSpeedX * deltaTime;
+    const ballMoveDistanceY = ballSpeedY * deltaTime;
 
-  ballX += ballMoveDistanceX;
-  ballY += ballMoveDistanceY;
+    ballX += ballMoveDistanceX;
+    ballY += ballMoveDistanceY;
 
-  if (ballY <= 0 || ballY + ballSize >= canvas.height) {
-    ballSpeedY = -ballSpeedY;
-  }
+    if (ballY <= 0 || ballY + ballSize >= canvas.height) ballSpeedY = -ballSpeedY;
+    if (ballX <= 0) { player2Score++; resetBall(); }
+    if (ballX + ballSize >= canvas.width) { player1Score++; resetBall(); }
 
-  if (ballX <= 0) {
-    player2Score++;
-    resetBall();
-  }
-
-  if (ballX + ballSize >= canvas.width) {
-    player1Score++;
-    resetBall();
-  }
-
-  if (ballX <= paddleWidth && ballY + ballSize >= player1Y && ballY <= player1Y + paddleHeight) {
-    ballSpeedX = -ballSpeedX;
-  }
-
-  if (ballX + ballSize >= canvas.width - paddleWidth && ballY + ballSize >= player2Y && ballY <= player2Y + paddleHeight) {
-    ballSpeedX = -ballSpeedX;
-  }
+    if (ballX <= paddleWidth && ballY + ballSize >= player1Y && ballY <= player1Y + paddleHeight) ballSpeedX = -ballSpeedX;
+    if (ballX + ballSize >= canvas.width - paddleWidth && ballY + ballSize >= player2Y && ballY <= player2Y + paddleHeight) ballSpeedX = -ballSpeedX;
 }
 
-// Game loop with requestAnimationFrame and deltaTime
 let lastTime = 0;
-
 function gameLoop(timestamp) {
-  if (!lastTime) {
+    if (!lastTime) lastTime = timestamp;
+    const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
-  }
-  const deltaTime = (timestamp - lastTime) / 1000;  // Convert to seconds
-  lastTime = timestamp;
 
-  moveBall(deltaTime);
-  movePaddles(deltaTime);
-  drawGame();
+    moveBall(deltaTime);
+    movePaddles(deltaTime);
+    drawGame();
 
-  requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 }
 
 requestAnimationFrame(gameLoop);
 
-// WebSocket connection to send and receive game state
-var roomname = "{{ game_room.gameroom_name }}";
+const roomname = "{{ game_room.gameroom_name }}";
 const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
 
-ws.onopen = function () {
-    console.log("WebSocket connection established");
-};
-
-ws.onerror = function (error) {
-    console.error("WebSocket error:", error);
-};
-
-ws.onclose = function (event) {
-    console.log("WebSocket connection closed:", event);
-    console.log("Code:", event.code); // Shows the close code
-    console.log("Reason:", event.reason); // Provides any additional reason given
-};
-
-
-ws.onopen = () => {
-  console.log('Connected to the server');
-};
-
+ws.onopen = () => console.log("Connected to the server");
 ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
+    const data = JSON.parse(event.data);
+    if (data.paddle) myPaddle = data.paddle;
 
-  // Handle paddle assignment
-  if (data.paddle) {
-    myPaddle = data.paddle;  // Either 'paddle1' or 'paddle2'
-    console.log("Assigned to:", myPaddle);
-  }
-
-  // Handle game state updates (positions of paddles, ball, etc.)
-  if (data.player1Y !== undefined && data.player2Y !== undefined) {
-    player1Y = data.player1Y;
-    player2Y = data.player2Y;
-    ballX = data.ballX;
-    ballY = data.ballY;
-  }
+    if (data.player1Y !== undefined && data.player2Y !== undefined) {
+        player1Y = data.player1Y;
+        player2Y = data.player2Y;
+        ballX = data.ballX;
+        ballY = data.ballY;
+    }
 };
 
-ws.onclose = () => {
-  console.log('Disconnected from the server');
-};
-
-ws.onerror = (error) => {
-  console.error(error);
-};
-
-// Send game state to WebSocket server
 setInterval(() => {
-  if (myPaddle) {
-    const gameState = {
-      player1Y: player1Y,
-      player2Y: player2Y,
-      ballX: ballX,
-      ballY: ballY,
-      player1Score: player1Score,
-      player2Score: player2Score
-    };
-
-    ws.send(JSON.stringify(gameState));
-  }
-}, 1000 / 60);
+    if (myPaddle) {
+        ws.send(JSON.stringify({
+            player1Y,
+            player2Y,
+            ballX,
+            ballY,
+            player1Score,
+            player2Score
+        }));
+    }
+}, 100);
 
 </script>
 </body>

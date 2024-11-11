@@ -3,7 +3,8 @@ import json
 
 class GameConsumer(AsyncWebsocketConsumer):
     players = 0  # Class variable to keep track of the number of players
-    
+    connections = {}  # Dictionary to store connections and paddle assignments
+
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['group_name']
         self.room_group_name = f'game_{self.room_name}'
@@ -16,12 +17,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         
         await self.accept()
 
-        # Track number of players and assign paddle
-        GameConsumer.players += 1
-        if GameConsumer.players == 1:
-            self.paddle = 'paddle1'
-        elif GameConsumer.players == 2:
-            self.paddle = 'paddle2'
+        # Track the number of players and assign paddle if space available
+        if GameConsumer.players < 2:
+            GameConsumer.players += 1
+            self.paddle = f'paddle{GameConsumer.players}'
+            GameConsumer.connections[self.channel_name] = self.paddle
         else:
             # Reject if more than 2 players try to connect
             await self.close()
@@ -33,8 +33,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
-        # Decrease the number of players
-        GameConsumer.players -= 1
+        # Decrease the number of players if they disconnect
+        if self.channel_name in GameConsumer.connections:
+            GameConsumer.players -= 1
+            del GameConsumer.connections[self.channel_name]
 
         # Remove the player from the group
         await self.channel_layer.group_discard(
