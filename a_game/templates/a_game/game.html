@@ -27,17 +27,19 @@ const netWidth = 4;
 const paddleWidth = 10;
 const paddleHeight = 100;
 const ballSize = 10;
+<<<<<<< HEAD
 const paddleSpeed = 400;
 const ballSpeed = 300;
+=======
+>>>>>>> recovered-work
 
 let ballX = canvas.width / 2 - ballSize / 2;
 let ballY = canvas.height / 2 - ballSize / 2;
-let ballSpeedX = ballSpeed;
-let ballSpeedY = ballSpeed;
 let player1Y = canvas.height / 2 - paddleHeight / 2;
 let player2Y = canvas.height / 2 - paddleHeight / 2;
 let player1Score = 0;
 let player2Score = 0;
+<<<<<<< HEAD
 let myPaddle = null;  // 'paddle1' or 'paddle2'
 let keysPressed = {};
 
@@ -100,20 +102,89 @@ function gameLoop(timestamp) {
     moveBall(deltaTime);
     movePaddles(deltaTime);
     drawGame();
+=======
+let myPaddle = null;
+let gameStarted = false;
+
+let paddleVelocity = 0;
+
+document.addEventListener('keydown', (e) => {
+  if (myPaddle === 'paddle1') {
+    if (e.key === 'w') paddleVelocity = -400;
+    if (e.key === 's') paddleVelocity = 400;
+  } else if (myPaddle === 'paddle2') {
+    if (e.key === 'ArrowUp') paddleVelocity = -400;
+    if (e.key === 'ArrowDown') paddleVelocity = 400;
+  }
+  ws.send(JSON.stringify({ velocity: paddleVelocity }));
+});
+
+document.addEventListener('keyup', (e) => {
+  if (myPaddle === 'paddle1' && (e.key === 'w' || e.key === 's')) {
+    paddleVelocity = 0;
+  } else if (myPaddle === 'paddle2' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    paddleVelocity = 0;
+  }
+  ws.send(JSON.stringify({ velocity: paddleVelocity }));
+});
+
+function drawRect(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawCircle(x, y, r, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2, false);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawNet() {
+  for (let i = 0; i <= canvas.height; i += 15) {
+    drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff');
+  }
+}
+
+function drawGame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawRect(0, 0, canvas.width, canvas.height, '#000');
+  drawNet();
+  drawRect(0, player1Y, paddleWidth, paddleHeight, '#fff');
+  drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#fff');
+  drawCircle(ballX, ballY, ballSize, '#fff');
+}
+
+function resetBall() {
+  // Ball reset handled by server; no need to reset locally
+}
+
+function gameLoop(timestamp) {
+  drawGame();  // Draws the entire game including paddles and ball at updated positions
+>>>>>>> recovered-work
 
     requestAnimationFrame(gameLoop);
 }
 
 requestAnimationFrame(gameLoop);
 
+<<<<<<< HEAD
 const roomname = "{{ game_room.gameroom_name }}";
 const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
 
 ws.onopen = () => console.log("Connected to the server");
+=======
+var roomname = "{{ game_room.gameroom_name }}";
+const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
+
+ws.onopen = () => console.log('Connected to the server');
+>>>>>>> recovered-work
 ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.paddle) myPaddle = data.paddle;
 
+<<<<<<< HEAD
     if (data.player1Y !== undefined && data.player2Y !== undefined) {
         player1Y = data.player1Y;
         player2Y = data.player2Y;
@@ -133,9 +204,48 @@ setInterval(() => {
             player2Score
         }));
     }
+=======
+  if (data.paddle) {
+    myPaddle = data.paddle;
+    console.log("Assigned to:", myPaddle);
+  }
+
+  if (data.start_game !== undefined) {
+    gameStarted = data.start_game;
+    ballX = data.ballX;
+    ballY = data.ballY;
+    player1Y = data.player1Y;
+    player2Y = data.player2Y;
+  }
+
+  if (data.player1Y !== undefined && data.player2Y !== undefined) {
+    player1Y = data.player1Y;
+    player2Y = data.player2Y;
+    ballX = data.ballX;
+    ballY = data.ballY;
+    player1Score = data.player1Score;
+    player2Score = data.player2Score;
+
+    // Update scores on the screen
+    document.getElementById('player1').textContent = player1Score;
+    document.getElementById('player2').textContent = player2Score;
+  }
+};
+
+ws.onclose = () => console.log('Disconnected from the server');
+ws.onerror = (error) => console.error(error);
+
+// Only send paddle velocity data at a regular interval to avoid spamming the server
+setInterval(() => {
+  if (myPaddle && gameStarted) {
+    ws.send(JSON.stringify({ velocity: paddleVelocity }));
+  }
+>>>>>>> recovered-work
 }, 100);
 
 </script>
+
 </body>
 {% endblock %}
 </html>
+

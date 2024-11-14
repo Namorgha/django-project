@@ -1,69 +1,168 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
+import asyncio
+import random
 
 class GameConsumer(AsyncWebsocketConsumer):
+<<<<<<< HEAD
     players = 0  # Class variable to keep track of the number of players
     connections = {}  # Dictionary to store connections and paddle assignments
+=======
+    players = 0
+    start_game = False
+    game_task = None
+
+    # Game state attributes
+    ballX = 0
+    ballY = 0
+    ballSpeedX = 300
+    ballSpeedY = 300
+    player1Score = 0
+    player2Score = 0
+    player1Y = 250
+    player2Y = 250
+    player1Velocity = 0
+    player2Velocity = 0
+    canvas_width = 800  # Example width, adjust as needed
+    canvas_height = 400  # Example height, adjust as needed
+    paddle_speed = 400
+    paddle_height = 100
+>>>>>>> recovered-work
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['group_name']
         self.room_group_name = f'game_{self.room_name}'
 
-        # Add the player to the group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
-        
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
+<<<<<<< HEAD
         # Track the number of players and assign paddle if space available
         if GameConsumer.players < 2:
             GameConsumer.players += 1
             self.paddle = f'paddle{GameConsumer.players}'
             GameConsumer.connections[self.channel_name] = self.paddle
+=======
+        GameConsumer.players += 1
+        if GameConsumer.players == 1:
+            self.paddle = 'paddle1'
+        elif GameConsumer.players == 2:
+            self.paddle = 'paddle2'
+            GameConsumer.start_game = True
+            GameConsumer.reset_ball()
+            await self.start_game_loop()
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'game_start',
+                    'start_game': GameConsumer.start_game,
+                    'ballX': GameConsumer.ballX,
+                    'ballY': GameConsumer.ballY,
+                    'player1Y': GameConsumer.player1Y,
+                    'player2Y': GameConsumer.player2Y
+                }
+            )
+>>>>>>> recovered-work
         else:
-            # Reject if more than 2 players try to connect
             await self.close()
             return
 
-        # Send paddle assignment to the client
-        await self.send(text_data=json.dumps({
-            'paddle': self.paddle
-        }))
+        await self.send(text_data=json.dumps({'paddle': self.paddle}))
 
     async def disconnect(self, close_code):
+<<<<<<< HEAD
         # Decrease the number of players if they disconnect
         if self.channel_name in GameConsumer.connections:
             GameConsumer.players -= 1
             del GameConsumer.connections[self.channel_name]
+=======
+        GameConsumer.players -= 1
+        if GameConsumer.players < 2:
+            GameConsumer.start_game = False
+            if GameConsumer.game_task:
+                GameConsumer.game_task.cancel()
+                GameConsumer.game_task = None
+>>>>>>> recovered-work
 
-        # Remove the player from the group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+    @staticmethod
+    def reset_ball():
+        GameConsumer.ballX = GameConsumer.canvas_width / 2
+        GameConsumer.ballY = GameConsumer.canvas_height / 2
+        GameConsumer.ballSpeedX = 300 * random.choice([-1, 1])
+        GameConsumer.ballSpeedY = 300 * random.choice([-1, 1])
+
+    async def start_game_loop(self):
+        if not GameConsumer.game_task:
+            GameConsumer.game_task = asyncio.create_task(self.game_loop())
+
+    async def game_loop(self):
+        try:
+            while GameConsumer.start_game:
+                self.update_ball_position(0.016)
+                self.update_paddle_position(0.016)
+                
+                # Broadcast the updated game state to clients
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'game_state',
+                        'player1Y': GameConsumer.player1Y,
+                        'player2Y': GameConsumer.player2Y,
+                        'ballX': GameConsumer.ballX,
+                        'ballY': GameConsumer.ballY,
+                        'player1Score': GameConsumer.player1Score,
+                        'player2Score': GameConsumer.player2Score
+                    }
+                )
+
+                await asyncio.sleep(0.016)  # Update at ~60 FPS
+        except asyncio.CancelledError:
+            pass
+
+    def update_ball_position(self, delta_time):
+        GameConsumer.ballX += GameConsumer.ballSpeedX * delta_time
+        GameConsumer.ballY += GameConsumer.ballSpeedY * delta_time
+
+        if GameConsumer.ballY <= 0 or GameConsumer.ballY >= GameConsumer.canvas_height:
+            GameConsumer.ballSpeedY = -GameConsumer.ballSpeedY
+
+        if GameConsumer.ballX <= 0:
+            GameConsumer.player2Score += 1
+            GameConsumer.reset_ball()
+        elif GameConsumer.ballX >= GameConsumer.canvas_width:
+            GameConsumer.player1Score += 1
+            GameConsumer.reset_ball()
+
+    def update_paddle_position(self, delta_time):
+        # Update player1 paddle position based on velocity
+        GameConsumer.player1Y += GameConsumer.player1Velocity * delta_time
+        GameConsumer.player1Y = max(0, min(GameConsumer.player1Y, GameConsumer.canvas_height - GameConsumer.paddle_height))
+
+        # Update player2 paddle position based on velocity
+        GameConsumer.player2Y += GameConsumer.player2Velocity * delta_time
+        GameConsumer.player2Y = max(0, min(GameConsumer.player2Y, GameConsumer.canvas_height - GameConsumer.paddle_height))
 
     async def receive(self, text_data):
-        # Process incoming game state from clients
         text_data_json = json.loads(text_data)
-        player1Y = text_data_json.get('player1Y')
-        player2Y = text_data_json.get('player2Y')
-        ballX = text_data_json.get('ballX')
-        ballY = text_data_json.get('ballY')
-
-        # Broadcast the updated game state to the group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'game_state',
-                'player1Y': player1Y,
-                'player2Y': player2Y,
-                'ballX': ballX,
-                'ballY': ballY,
-            }
-        )
-
+        
+        # Update paddle velocities based on client input
+        if self.paddle == 'paddle1':
+            GameConsumer.player1Velocity = text_data_json.get('velocity', 0)
+        elif self.paddle == 'paddle2':
+            GameConsumer.player2Velocity = text_data_json.get('velocity', 0)
+        
     async def game_state(self, event):
-        # Send the game state back to WebSocket clients
         await self.send(text_data=json.dumps(event))
+
+    async def game_start(self, event):
+        await self.send(text_data=json.dumps({
+            'start_game': event['start_game'],
+            'ballX': event['ballX'],
+            'ballY': event['ballY'],
+            'player1Y': event['player1Y'],
+            'player2Y': event['player2Y']
+        }))
+
