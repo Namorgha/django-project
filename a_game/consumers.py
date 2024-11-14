@@ -4,10 +4,6 @@ import asyncio
 import random
 
 class GameConsumer(AsyncWebsocketConsumer):
-<<<<<<< HEAD
-    players = 0  # Class variable to keep track of the number of players
-    connections = {}  # Dictionary to store connections and paddle assignments
-=======
     players = 0
     start_game = False
     game_task = None
@@ -23,11 +19,10 @@ class GameConsumer(AsyncWebsocketConsumer):
     player2Y = 250
     player1Velocity = 0
     player2Velocity = 0
-    canvas_width = 800  # Example width, adjust as needed
-    canvas_height = 400  # Example height, adjust as needed
+    canvas_width = 1000  # Example width, adjust as needed
+    canvas_height = 600  # Example height, adjust as needed
     paddle_speed = 400
     paddle_height = 100
->>>>>>> recovered-work
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['group_name']
@@ -36,13 +31,6 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-<<<<<<< HEAD
-        # Track the number of players and assign paddle if space available
-        if GameConsumer.players < 2:
-            GameConsumer.players += 1
-            self.paddle = f'paddle{GameConsumer.players}'
-            GameConsumer.connections[self.channel_name] = self.paddle
-=======
         GameConsumer.players += 1
         if GameConsumer.players == 1:
             self.paddle = 'paddle1'
@@ -63,7 +51,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'player2Y': GameConsumer.player2Y
                 }
             )
->>>>>>> recovered-work
         else:
             await self.close()
             return
@@ -71,19 +58,12 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({'paddle': self.paddle}))
 
     async def disconnect(self, close_code):
-<<<<<<< HEAD
-        # Decrease the number of players if they disconnect
-        if self.channel_name in GameConsumer.connections:
-            GameConsumer.players -= 1
-            del GameConsumer.connections[self.channel_name]
-=======
         GameConsumer.players -= 1
         if GameConsumer.players < 2:
             GameConsumer.start_game = False
             if GameConsumer.game_task:
                 GameConsumer.game_task.cancel()
                 GameConsumer.game_task = None
->>>>>>> recovered-work
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 

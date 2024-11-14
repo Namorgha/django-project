@@ -8,13 +8,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ping Pong</title>
     <style>
-        * { margin: 0; padding: 0; }
-        body { overflow: hidden; font-family: Arial, sans-serif; background-color: #1F3A1F; }
-        #canvas { position: absolute; top: 50px; width: 100%; height: calc(100% - 50px); }
+        * { 
+          margin: 0;
+          padding: 0;
+        }
+        body { 
+          overflow: hidden;
+          font-family: Arial, sans-serif;
+          background-color: #1F3A1F;
+        }
+        #player1 { 
+          margin-right: 100px;
+        }
+        #player2 {
+          margin-left: 100px;
+        }
+        #canvas {
+          position: absolute;
+          top: 50px; 
+          width: 100%;
+          height: calc(100% - 50px); 
+        }
     </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
+<h1 id="player1">0</h1>
+<h1 id="player2">0</h1>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -27,11 +47,6 @@ const netWidth = 4;
 const paddleWidth = 10;
 const paddleHeight = 100;
 const ballSize = 10;
-<<<<<<< HEAD
-const paddleSpeed = 400;
-const ballSpeed = 300;
-=======
->>>>>>> recovered-work
 
 let ballX = canvas.width / 2 - ballSize / 2;
 let ballY = canvas.height / 2 - ballSize / 2;
@@ -39,70 +54,6 @@ let player1Y = canvas.height / 2 - paddleHeight / 2;
 let player2Y = canvas.height / 2 - paddleHeight / 2;
 let player1Score = 0;
 let player2Score = 0;
-<<<<<<< HEAD
-let myPaddle = null;  // 'paddle1' or 'paddle2'
-let keysPressed = {};
-
-// Track key states
-document.addEventListener('keydown', (e) => keysPressed[e.key] = true);
-document.addEventListener('keyup', (e) => keysPressed[e.key] = false);
-
-function drawRect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); }
-function drawCircle(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2, false); ctx.closePath(); ctx.fill(); }
-function drawNet() { for (let i = 0; i <= canvas.height; i += 15) drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff'); }
-
-function drawGame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawRect(0, 0, canvas.width, canvas.height, '#000');
-    drawNet();
-    drawRect(0, player1Y, paddleWidth, paddleHeight, '#fff');
-    drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#fff');
-    drawCircle(ballX, ballY, ballSize, '#fff');
-}
-
-function resetBall() {
-    ballX = canvas.width / 2 - ballSize / 2;
-    ballY = canvas.height / 2 - ballSize / 2;
-    ballSpeedX = -ballSpeedX;
-    ballSpeedY = 300 * (Math.random() * 2 - 1);
-}
-
-function movePaddles(deltaTime) {
-    const paddleMoveDistance = paddleSpeed * deltaTime;
-    if (myPaddle === 'paddle1') {
-        if (keysPressed['ArrowUp']) player1Y = Math.max(player1Y - paddleMoveDistance, 0);
-        if (keysPressed['ArrowDown']) player1Y = Math.min(player1Y + paddleMoveDistance, canvas.height - paddleHeight);
-    } else if (myPaddle === 'paddle2') {
-        if (keysPressed['ArrowUp']) player2Y = Math.max(player2Y - paddleMoveDistance, 0);
-        if (keysPressed['ArrowDown']) player2Y = Math.min(player2Y + paddleMoveDistance, canvas.height - paddleHeight);
-    }
-}
-
-function moveBall(deltaTime) {
-    const ballMoveDistanceX = ballSpeedX * deltaTime;
-    const ballMoveDistanceY = ballSpeedY * deltaTime;
-
-    ballX += ballMoveDistanceX;
-    ballY += ballMoveDistanceY;
-
-    if (ballY <= 0 || ballY + ballSize >= canvas.height) ballSpeedY = -ballSpeedY;
-    if (ballX <= 0) { player2Score++; resetBall(); }
-    if (ballX + ballSize >= canvas.width) { player1Score++; resetBall(); }
-
-    if (ballX <= paddleWidth && ballY + ballSize >= player1Y && ballY <= player1Y + paddleHeight) ballSpeedX = -ballSpeedX;
-    if (ballX + ballSize >= canvas.width - paddleWidth && ballY + ballSize >= player2Y && ballY <= player2Y + paddleHeight) ballSpeedX = -ballSpeedX;
-}
-
-let lastTime = 0;
-function gameLoop(timestamp) {
-    if (!lastTime) lastTime = timestamp;
-    const deltaTime = (timestamp - lastTime) / 1000;
-    lastTime = timestamp;
-
-    moveBall(deltaTime);
-    movePaddles(deltaTime);
-    drawGame();
-=======
 let myPaddle = null;
 let gameStarted = false;
 
@@ -162,49 +113,19 @@ function resetBall() {
 
 function gameLoop(timestamp) {
   drawGame();  // Draws the entire game including paddles and ball at updated positions
->>>>>>> recovered-work
 
-    requestAnimationFrame(gameLoop);
+  requestAnimationFrame(gameLoop);
 }
 
 requestAnimationFrame(gameLoop);
 
-<<<<<<< HEAD
-const roomname = "{{ game_room.gameroom_name }}";
-const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
-
-ws.onopen = () => console.log("Connected to the server");
-=======
 var roomname = "{{ game_room.gameroom_name }}";
 const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
 
 ws.onopen = () => console.log('Connected to the server');
->>>>>>> recovered-work
 ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.paddle) myPaddle = data.paddle;
+  const data = JSON.parse(event.data);
 
-<<<<<<< HEAD
-    if (data.player1Y !== undefined && data.player2Y !== undefined) {
-        player1Y = data.player1Y;
-        player2Y = data.player2Y;
-        ballX = data.ballX;
-        ballY = data.ballY;
-    }
-};
-
-setInterval(() => {
-    if (myPaddle) {
-        ws.send(JSON.stringify({
-            player1Y,
-            player2Y,
-            ballX,
-            ballY,
-            player1Score,
-            player2Score
-        }));
-    }
-=======
   if (data.paddle) {
     myPaddle = data.paddle;
     console.log("Assigned to:", myPaddle);
@@ -240,7 +161,6 @@ setInterval(() => {
   if (myPaddle && gameStarted) {
     ws.send(JSON.stringify({ velocity: paddleVelocity }));
   }
->>>>>>> recovered-work
 }, 100);
 
 </script>
