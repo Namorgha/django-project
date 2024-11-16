@@ -145,4 +145,3 @@ class GameConsumer(AsyncWebsocketConsumer):
             'player1Y': event['player1Y'],
             'player2Y': event['player2Y']
         }))
-

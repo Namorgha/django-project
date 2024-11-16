@@ -84,10 +84,10 @@ function drawRect(x, y, w, h, color) {
   ctx.fillRect(x, y, w, h);
 }
 
-function drawCircle(x, y, r, color) {
+function drawCircle(x, y, size, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2, false);
+  ctx.arc(x, y, size, 0, Math.PI * 2, false);
   ctx.closePath();
   ctx.fill();
 }
@@ -98,13 +98,16 @@ function drawNet() {
   }
 }
 
+const centerX = (canvas.width - paddleWidth) / 2;
+const centerY = (canvas.height - paddleHeight) / 2;
+
 function drawGame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawRect(0, 0, canvas.width, canvas.height, '#000');
   drawNet();
-  drawRect(0, player1Y, paddleWidth, paddleHeight, '#fff');
-  drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#fff');
-  drawCircle(ballX, ballY, ballSize, '#fff');
+  drawRect(centerX, player1Y, paddleWidth, paddleHeight, '#ff0000');
+  drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, '#0000ff');
+  drawCircle(ballX, ballY, ballSize, '#00ff80');1
 }
 
 function resetBall() {
@@ -161,11 +164,10 @@ setInterval(() => {
   if (myPaddle && gameStarted) {
     ws.send(JSON.stringify({ velocity: paddleVelocity }));
   }
-}, 100);
+}, 30);
 
 </script>
 
 </body>
 {% endblock %}
 </html>
-
