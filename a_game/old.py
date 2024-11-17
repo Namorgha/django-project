@@ -19,10 +19,8 @@ class GameConsumer(AsyncWebsocketConsumer):
     player2Y = 250
     player1Velocity = 0
     player2Velocity = 0
-    canvas_width = 1000
-    canvas_height = 600
-    table_left = 0
-    table_right = 0
+    canvas_width = 1000  # Example width, adjust as needed
+    canvas_height = 600  # Example height, adjust as needed
     paddle_speed = 400
     paddle_height = 100
 
@@ -104,61 +102,49 @@ class GameConsumer(AsyncWebsocketConsumer):
         except asyncio.CancelledError:
             pass
 
-    def update_ball_position(self, delta_time):
-        GameConsumer.ballX += GameConsumer.ballSpeedX * delta_time
-        GameConsumer.ballY += GameConsumer.ballSpeedY * delta_time
+def update_ball_position(self, delta_time):
+    # Update ball position
+    GameConsumer.ballX += GameConsumer.ballSpeedX * delta_time
+    GameConsumer.ballY += GameConsumer.ballSpeedY * delta_time
 
-        # check if the ball hit the top or bottom of the table and add the middle of the size of the ball to look more realistic
-        if GameConsumer.ballY <= GameConsumer.table_top + 15 or GameConsumer.ballY >= GameConsumer.table_bottom - 15:
-            GameConsumer.ballSpeedY = -GameConsumer.ballSpeedY
-        
+    # Ensure screen dimensions and table boundaries are set
+    table_left = getattr(self, 'table_left', 100)  # Default to 10% of canvas width
+    table_right = getattr(self, 'table_right', 900)  # Default to 90% of canvas width
+    table_top = getattr(self, 'table_top', 60)  # Default to 10% of canvas height
+    table_bottom = getattr(self, 'table_bottom', 540)  # Default to 90% of canvas height
 
-        # check if the ball hit the paddle and add the middle of the size of the ball to look more realistic
-        if GameConsumer.ballX <= GameConsumer.table_left + 30 and GameConsumer.player1Y <= GameConsumer.ballY <= GameConsumer.player1Y + GameConsumer.paddle_height:
-            GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX
-        elif GameConsumer.ballX >= GameConsumer.table_right - 30 and GameConsumer.player2Y <= GameConsumer.ballY <= GameConsumer.player2Y + GameConsumer.paddle_height:
-            GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX
+    # Bounce off the top and bottom walls of the table
+    if GameConsumer.ballY <= table_top:  # Hits the top wall
+        GameConsumer.ballY = table_top  # Adjust to stay within bounds
+        GameConsumer.ballSpeedY = -GameConsumer.ballSpeedY  # Reverse Y direction
 
-        if GameConsumer.ballX <= GameConsumer.table_left:
-            GameConsumer.player2Score += 1
-            GameConsumer.reset_ball()
-        elif GameConsumer.ballX >= GameConsumer.table_right:
-            GameConsumer.player1Score += 1
-            GameConsumer.reset_ball()
+    if GameConsumer.ballY >= table_bottom:  # Hits the bottom wall
+        GameConsumer.ballY = table_bottom  # Adjust to stay within bounds
+        GameConsumer.ballSpeedY = -GameConsumer.ballSpeedY  # Reverse Y direction
 
-    def update_paddle_position(self, delta_time):
-        GameConsumer.player1Y += GameConsumer.player1Velocity * delta_time
-        GameConsumer.player1Y = max(GameConsumer.table_top , min(GameConsumer.player1Y, GameConsumer.table_bottom - GameConsumer.paddle_height))
-
-
-        GameConsumer.player2Y += GameConsumer.player2Velocity * delta_time
-        GameConsumer.player2Y = max(GameConsumer.table_top , min(GameConsumer.player2Y, GameConsumer.table_bottom - GameConsumer.paddle_height))
+    # Bounce off the left and right walls of the table
+    if GameConsumer.ballX <= table_left:  # Hits left wall
+        GameConsumer.ballX = table_left  # Adjust to stay within bounds
+        GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX  # Reverse X direction
+    elif GameConsumer.ballX >= table_right:  # Hits right wall
+        GameConsumer.ballX = table_right  # Adjust to stay within bounds
+        GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX  # Reverse X direction
 
 
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        
-        if text_data_json.get('type') == 'screen_dimensions':
-            GameConsumer.canvas_width = text_data_json.get('width', 1000)
-            GameConsumer.canvas_height = text_data_json.get('height', 600)
-            GameConsumer.table_left = GameConsumer.canvas_width / 10
-            GameConsumer.table_right = GameConsumer.canvas_width - GameConsumer.canvas_width / 10
-            GameConsumer.table_top = GameConsumer.canvas_height / 10
-            GameConsumer.table_bottom = GameConsumer.canvas_height - GameConsumer.canvas_height / 10
+async def receive(self, text_data):
+    data = json.loads(text_data)
 
-        if self.paddle == 'paddle1':
-            GameConsumer.player1Velocity = text_data_json.get('velocity', 0)
-        elif self.paddle == 'paddle2':
-            GameConsumer.player2Velocity = text_data_json.get('velocity', 0)
-        
-    async def game_state(self, event):
-        await self.send(text_data=json.dumps(event))
+    # Handle screen dimensions
+    if data.get('type') == 'screen_dimensions':
+        self.screen_width = data.get('width', 1000)  # Default to 1000 if not provided
+        self.screen_height = data.get('height', 600)  # Default to 600 if not provided
 
-    async def game_start(self, event):
-        await self.send(text_data=json.dumps({
-            'start_game': event['start_game'],
-            'ballX': event['ballX'],
-            'ballY': event['ballY'],
-            'player1Y': event['player1Y'],
-            'player2Y': event['player2Y']
-        }))
+        # Define table dimensions (10% margins on all sides)
+        self.table_left = self.screen_width / 10
+        self.table_right = self.screen_width - self.screen_width / 10
+        self.table_top = self.screen_height / 10
+        self.table_bottom = self.screen_height - self.screen_height / 10
+
+        # Log the dimensions for debugging
+        print(f"Table boundaries: Left={self.table_left}, Right={self.table_right}, Top={self.table_top}, Bottom={self.table_bottom}")
+

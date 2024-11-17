@@ -93,7 +93,7 @@ function drawCircle(x, y, size, color) {
 }
 
 function drawNet() {
-  for (let i = window.innerHeight / 10; i <= canvas.height - window.innerHeight / 10; i += 30) {
+  for (let i = 0; i <= canvas.height; i += 15) {
     drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff');
   }
 }
@@ -127,16 +127,13 @@ const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
 
 ws.onopen = () => {
   console.log('Connected to the server');
-  try {
-    console.log('Sending screen dimensions');
-    ws.send(JSON.stringify({
-      type: 'screen_dimensions',
-      width: window.innerWidth,
-      height: window.innerHeight,
-    }));
-  } catch (error) {
-    console.error('Failed to send data:', error);
-  }
+
+  // Send screen dimensions to the server
+  ws.send(JSON.stringify({
+    type: 'screen_dimensions',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
 };
 
 ws.onmessage = (event) => {
