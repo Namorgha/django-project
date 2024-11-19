@@ -8,7 +8,6 @@ class GameConsumer(AsyncWebsocketConsumer):
     start_game = False
     game_task = None
 
-    # Game state attributes
     ballX = 0
     ballY = 0
     ballSpeedX = 300
@@ -86,7 +85,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                 self.update_ball_position(0.016)
                 self.update_paddle_position(0.016)
                 
-                # Broadcast the updated game state to clients
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -100,7 +98,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     }
                 )
 
-                await asyncio.sleep(0.016)  # Update at ~60 FPS
+                await asyncio.sleep(0.016)
         except asyncio.CancelledError:
             pass
 
@@ -108,12 +106,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         GameConsumer.ballX += GameConsumer.ballSpeedX * delta_time
         GameConsumer.ballY += GameConsumer.ballSpeedY * delta_time
 
-        # check if the ball hit the top or bottom of the table and add the middle of the size of the ball to look more realistic
         if GameConsumer.ballY <= GameConsumer.table_top + 15 or GameConsumer.ballY >= GameConsumer.table_bottom - 15:
             GameConsumer.ballSpeedY = -GameConsumer.ballSpeedY
         
 
-        # check if the ball hit the paddle and add the middle of the size of the ball to look more realistic
         if GameConsumer.ballX <= GameConsumer.table_left + 30 and GameConsumer.player1Y <= GameConsumer.ballY <= GameConsumer.player1Y + GameConsumer.paddle_height:
             GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX
         elif GameConsumer.ballX >= GameConsumer.table_right - 30 and GameConsumer.player2Y <= GameConsumer.ballY <= GameConsumer.player2Y + GameConsumer.paddle_height:

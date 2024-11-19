@@ -89,8 +89,7 @@ function drawNet() {
     drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff');
   }
 }
-
-// draw score for each player inside the table 
+ 
 function drawScore() {
   ctx.font = '35px Arial';
   ctx.fillStyle = '#fff';
@@ -112,19 +111,17 @@ function drawGame() {
 }
 
 function resetBall() {
-  // Ball reset handled by server; no need to reset locally
 }
 
 function gameLoop(timestamp) {
-  drawGame();  // Draws the entire game including paddles and ball at updated positions
-
+  drawGame();  
   requestAnimationFrame(gameLoop);
 }
 
 requestAnimationFrame(gameLoop);
 
 var roomname = "{{ game_room.gameroom_name }}";
-const ws = new WebSocket(`ws://10.30.244.189:8000/ws/game/${roomname}/`);
+const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomname}/`);
 
 ws.onopen = () => {
   console.log('Connected to the server');
@@ -164,7 +161,6 @@ ws.onmessage = (event) => {
     player1Score = data.player1Score;
     player2Score = data.player2Score;
 
-    // Update scores on the screen
     document.getElementById('player1').textContent = player1Score;
     document.getElementById('player2').textContent = player2Score;
   }
@@ -173,7 +169,6 @@ ws.onmessage = (event) => {
 ws.onclose = () => console.log('Disconnected from the server');
 ws.onerror = (error) => console.error(error);
 
-// Only send paddle velocity data at a regular interval to avoid spamming the server
 setInterval(() => {
   if (myPaddle && gameStarted) {
     ws.send(JSON.stringify({ velocity: paddleVelocity }));
